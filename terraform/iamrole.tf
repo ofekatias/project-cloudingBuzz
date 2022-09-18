@@ -16,10 +16,35 @@ assume_role_policy = <<EOF
 }
 EOF
 }
+resource "aws_iam_policy" "policy" {
+  name        = "test_policy"
+  path        = "/"
+  description = "My test policy"
 
-resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ec2:Describe*",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
+}
+resource "aws_iam_role_policy_attachment" "sns-attach" {
   role       = aws_iam_role.lambda_role.name
-  count      = "${length(var.iam_policy_arn)}"
-  policy_arn = "${var.iam_policy_arn[count.index]}"
+  policy_arn = data.aws_iam_policy.role_sns.arn
+}
+resource "aws_iam_role_policy_attachment" "api-attach" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = data.aws_iam_policy.role_api.arn
+}
+resource "aws_iam_role_policy_attachment" "ec2-attach" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = data.aws_iam_policy.role_ec2.arn
+
 }
 
